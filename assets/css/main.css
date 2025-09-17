@@ -3,11 +3,23 @@
 }
 
 body {
+  --app-padding-inline: clamp(var(--space-sm), 6vw, var(--space-lg));
+  --app-padding-block: clamp(var(--space-lg), 6vh, var(--space-xl));
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: var(--space-xl) var(--space-lg);
+  padding-inline: var(--app-padding-inline);
+  padding-block: var(--app-padding-block);
+}
+
+@supports (padding: max(0px, 0px)) {
+  body {
+    padding-top: max(var(--app-padding-block), env(safe-area-inset-top));
+    padding-bottom: max(var(--app-padding-block), env(safe-area-inset-bottom));
+    padding-left: max(var(--app-padding-inline), env(safe-area-inset-left));
+    padding-right: max(var(--app-padding-inline), env(safe-area-inset-right));
+  }
 }
 
 .app-shell {
@@ -24,6 +36,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  align-items: center;
   gap: var(--space-md);
   padding: var(--space-lg) var(--space-xl) var(--space-md);
   background: var(--color-surface-muted);
@@ -98,10 +111,12 @@ input,
 select {
   appearance: none;
   padding: var(--space-sm);
+  min-height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-surface-muted);
   color: var(--color-text);
+  font-size: 1rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -122,6 +137,7 @@ button {
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
@@ -317,9 +333,9 @@ button.secondary:hover {
   display: grid;
 }
 
-@media (max-width: 640px) {
-  body {
-    padding: var(--space-lg) var(--space-sm);
+@media (max-width: 720px) {
+  .app-shell {
+    border-radius: var(--radius-md);
   }
 
   .app-header {
@@ -332,5 +348,50 @@ button.secondary:hover {
 
   .cta {
     padding: 0 var(--space-lg) var(--space-lg);
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    align-items: stretch;
+  }
+
+  .app-shell {
+    box-shadow: none;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    gap: var(--space-sm);
+  }
+
+  .app-header button {
+    width: 100%;
+  }
+
+  .compare-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+  }
+
+  .compare-row .pill {
+    justify-self: flex-start;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .panel {
+    padding: var(--space-md);
+  }
+
+  .kpi {
+    padding: var(--space-sm);
+  }
+
+  .app-header h1 {
+    font-size: 1.15rem;
   }
 }
