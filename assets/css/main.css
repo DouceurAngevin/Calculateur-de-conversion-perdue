@@ -199,14 +199,15 @@ button.secondary:hover {
 
 .kpi .value {
   margin-top: var(--space-xs);
-  font-size: 1.4rem;
+  font-size: clamp(1.1rem, 1rem + 0.6vw, 1.4rem);
   font-weight: 700;
   line-height: 1.2;
   overflow-wrap: anywhere;
+  max-width: 100%;
 }
 
 .kpi .value.is-compact {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.2rem);
 }
 
 .compare {

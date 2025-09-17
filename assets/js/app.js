@@ -5,12 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
     maximumFractionDigits: 0,
   });
 
-  const compactCurrencyFormatter = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    notation: 'compact',
-    maximumFractionDigits: 1,
+  const compactIntegerFormatter = new Intl.NumberFormat('fr-FR', {
+    maximumFractionDigits: 0,
   });
+
+  const COMPACT_CURRENCY_STEPS = [
+    { threshold: 1_000_000_000, divisor: 1_000_000_000, suffix: 'Md€' },
+    { threshold: 1_000_000, divisor: 1_000_000, suffix: 'M€' },
+    { threshold: 1_000, divisor: 1_000, suffix: 'k€' },
+  ];
 
   const normalizeSpaces = (value) =>
     value.replace(/\u202f|\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
@@ -22,24 +25,39 @@ document.addEventListener('DOMContentLoaded', () => {
       : normalized.replace(/\s€$/, '€');
   };
 
-  const stripTrailingZero = (value) => value.replace(/,0(?=\D)/g, '');
-
   const formatCurrency = (value) => {
     if (!Number.isFinite(value)) {
       return { display: '—', compact: false, title: '' };
     }
 
     const full = tidyCurrencySpacing(standardCurrencyFormatter.format(value));
-    const needsCompact = Math.abs(value) >= 1_000_000 || full.length > 12;
-    if (!needsCompact) {
-      return { display: full, compact: false, title: '' };
+    const absolute = Math.abs(value);
+
+    for (let index = 0; index < COMPACT_CURRENCY_STEPS.length; index += 1) {
+      const step = COMPACT_CURRENCY_STEPS[index];
+      if (absolute >= step.threshold) {
+        const roundedCurrent = Math.round(value / step.divisor);
+        if (Math.abs(roundedCurrent) >= 1000 && index > 0) {
+          const higherStep = COMPACT_CURRENCY_STEPS[index - 1];
+          const roundedHigher = Math.round(value / higherStep.divisor);
+          return {
+            display: `${normalizeSpaces(
+              compactIntegerFormatter.format(roundedHigher),
+            )} ${higherStep.suffix}`,
+            compact: true,
+            title: full,
+          };
+        }
+
+        return {
+          display: `${normalizeSpaces(compactIntegerFormatter.format(roundedCurrent))} ${step.suffix}`,
+          compact: true,
+          title: full,
+        };
+      }
     }
 
-    const compactRaw = tidyCurrencySpacing(compactCurrencyFormatter.format(value), {
-      keepCurrencyGap: false,
-    });
-    const compact = stripTrailingZero(compactRaw);
-    return { display: compact, compact: true, title: full };
+    return { display: full, compact: false, title: '' };
   };
 
   const get = (id) => document.getElementById(id);
