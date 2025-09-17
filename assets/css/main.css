@@ -201,6 +201,12 @@ button.secondary:hover {
   margin-top: var(--space-xs);
   font-size: 1.4rem;
   font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.kpi .value.is-compact {
+  font-size: 1.2rem;
 }
 
 .compare {

@@ -1,14 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const formatCurrency = (value) =>
-    Number.isFinite(value)
-      ? value.toLocaleString('fr-FR', {
-          style: 'currency',
-          currency: 'EUR',
-          maximumFractionDigits: 0,
-        })
-      : '—';
+  const standardCurrencyFormatter = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  });
+
+  const compactCurrencyFormatter = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  });
+
+  const normalizeSpaces = (value) =>
+    value.replace(/\u202f|\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const tidyCurrencySpacing = (value, { keepCurrencyGap = true } = {}) => {
+    const normalized = normalizeSpaces(value);
+    return keepCurrencyGap
+      ? normalized.replace(/\s€$/, ' €')
+      : normalized.replace(/\s€$/, '€');
+  };
+
+  const stripTrailingZero = (value) => value.replace(/,0(?=\D)/g, '');
+
+  const formatCurrency = (value) => {
+    if (!Number.isFinite(value)) {
+      return { display: '—', compact: false, title: '' };
+    }
+
+    const full = tidyCurrencySpacing(standardCurrencyFormatter.format(value));
+    const needsCompact = Math.abs(value) >= 1_000_000 || full.length > 12;
+    if (!needsCompact) {
+      return { display: full, compact: false, title: '' };
+    }
+
+    const compactRaw = tidyCurrencySpacing(compactCurrencyFormatter.format(value), {
+      keepCurrencyGap: false,
+    });
+    const compact = stripTrailingZero(compactRaw);
+    return { display: compact, compact: true, title: full };
+  };
 
   const get = (id) => document.getElementById(id);
+
+  const updateCurrencyValue = (elementId, value) => {
+    const element = get(elementId);
+    if (!element) return;
+    const { display, compact, title } = formatCurrency(value);
+    element.textContent = display;
+    element.classList.toggle('is-compact', compact);
+    if (title) {
+      element.setAttribute('title', title);
+    } else {
+      element.removeAttribute('title');
+    }
+  };
 
   const readNumber = (id) => {
     const element = get(id);
@@ -91,9 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function resetResults({ benchLD, benchDS }) {
-    get('caActuel').textContent = '—';
-    get('caProjete').textContent = '—';
-    get('manque').textContent = '—';
+    updateCurrencyValue('caActuel', NaN);
+    updateCurrencyValue('caProjete', NaN);
+    updateCurrencyValue('manque', NaN);
 
     get('barLD').style.width = '0%';
     get('barDS').style.width = '0%';
@@ -134,9 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const caProjete = devis * (tauxDSAmeliore / 100) * panier;
     const manque = Math.max(0, caProjete - caActuel);
 
-    get('caActuel').textContent = formatCurrency(caActuel);
-    get('caProjete').textContent = formatCurrency(caProjete);
-    get('manque').textContent = formatCurrency(manque);
+    updateCurrencyValue('caActuel', caActuel);
+    updateCurrencyValue('caProjete', caProjete);
+    updateCurrencyValue('manque', manque);
 
     get('barLD').style.width = `${clampPercent(tauxLD)}%`;
     get('barDS').style.width = `${clampPercent(tauxDS)}%`;
