@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "public": "public",
+  "rewrites": [
+    { "source": "/favicon.svg", "destination": "/public/favicon.svg" },
+    { "source": "/", "destination": "/src/index.html" },
+    { "source": "/(.*)", "destination": "/src/index.html" }
+  ]
+}

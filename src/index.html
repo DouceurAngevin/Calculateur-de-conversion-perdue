@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Diagnostic Commercial Express</title>
+    <meta
+      name="description"
+      content="Mini-module local-first pour analyser votre tunnel commercial et estimer votre manque à gagner."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app" data-app-root data-cta-url="https://example.com">
+      <header class="intro">
+        <p class="eyebrow">Mini-module embarquable</p>
+        <h1>Diagnostic commercial express</h1>
+        <p class="subtitle">
+          Visualisez votre tunnel de conversion et votre potentiel de chiffre d'affaires en moins d'une minute.
+        </p>
+      </header>
+
+      <form id="metrics-form" class="form" novalidate>
+        <fieldset class="form-grid">
+          <legend class="sr-only">Données commerciales mensuelles</legend>
+
+          <div class="field" data-field="leads_mois">
+            <label for="leads_mois">Leads générés ce mois</label>
+            <input
+              type="number"
+              id="leads_mois"
+              name="leads_mois"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="0"
+              required
+            />
+            <p class="help" data-help-for="leads_mois" data-default="Nombre de prospects qualifiés.">
+              Nombre de prospects qualifiés.
+            </p>
+          </div>
+
+          <div class="field" data-field="devis_mois">
+            <label for="devis_mois">Devis envoyés</label>
+            <input
+              type="number"
+              id="devis_mois"
+              name="devis_mois"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="0"
+              required
+            />
+            <p class="help" data-help-for="devis_mois" data-default="Nombre de devis émis sur la période.">
+              Nombre de devis émis sur la période.
+            </p>
+          </div>
+
+          <div class="field" data-field="signatures_mois">
+            <label for="signatures_mois">Signatures obtenues</label>
+            <input
+              type="number"
+              id="signatures_mois"
+              name="signatures_mois"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="0"
+              required
+            />
+            <p
+              class="help"
+              data-help-for="signatures_mois"
+              data-default="Contrats signés (≤ devis)."
+            >
+              Contrats signés (≤ devis).
+            </p>
+          </div>
+
+          <div class="field" data-field="panier_moyen">
+            <label for="panier_moyen">Panier moyen (€)</label>
+            <input
+              type="number"
+              id="panier_moyen"
+              name="panier_moyen"
+              min="0"
+              step="1"
+              inputmode="decimal"
+              placeholder="0"
+              required
+            />
+            <p class="help" data-help-for="panier_moyen" data-default="Valeur moyenne d'une signature en euros.">
+              Valeur moyenne d'une signature en euros.
+            </p>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="button primary">Calculer</button>
+      </form>
+
+      <section class="results" aria-live="polite">
+        <div class="results-grid">
+          <article class="card">
+            <h2>Leads → Devis</h2>
+            <p class="metric" data-output="leads-rate">0,0 %</p>
+            <span class="badge" data-badge="leads" data-tone="muted">Non disponible</span>
+            <p class="note">Part des leads convertis en devis.</p>
+          </article>
+
+          <article class="card">
+            <h2>Devis → Signatures</h2>
+            <p class="metric" data-output="devis-rate">0,0 %</p>
+            <span class="badge" data-badge="devis" data-tone="muted">Non disponible</span>
+            <p class="note">Part des devis qui se concluent en signature.</p>
+          </article>
+
+          <article class="card span-2">
+            <h2>Chiffrage</h2>
+            <div class="numbers">
+              <div>
+                <p class="label">CA actuel</p>
+                <p class="value" data-output="ca-actuel">0&nbsp;€</p>
+              </div>
+              <div>
+                <p class="label">Manque à gagner (+10 pts)</p>
+                <p class="value accent" data-output="manque">0&nbsp;€</p>
+              </div>
+            </div>
+            <p class="note">Scénario : +10 points absolus sur la conversion devis → signatures.</p>
+          </article>
+
+          <article class="card span-2">
+            <h2>Comparatif</h2>
+            <div class="bar-group" data-bar="leads">
+              <p class="bar-title">Leads → Devis</p>
+              <div class="bar-line">
+                <span class="bar-label">Vos taux</span>
+                <div class="bar-track">
+                  <span class="bar-fill you" data-fill="leads-you"></span>
+                </div>
+                <span class="bar-value" data-value="leads-you">0,0 %</span>
+              </div>
+              <div class="bar-line">
+                <span class="bar-label">Moyenne</span>
+                <div class="bar-track">
+                  <span class="bar-fill bench" data-fill="leads-bench"></span>
+                </div>
+                <span class="bar-value" data-value="leads-bench">0,0 %</span>
+              </div>
+            </div>
+
+            <div class="bar-group" data-bar="devis">
+              <p class="bar-title">Devis → Signatures</p>
+              <div class="bar-line">
+                <span class="bar-label">Vos taux</span>
+                <div class="bar-track">
+                  <span class="bar-fill you" data-fill="devis-you"></span>
+                </div>
+                <span class="bar-value" data-value="devis-you">0,0 %</span>
+              </div>
+              <div class="bar-line">
+                <span class="bar-label">Moyenne</span>
+                <div class="bar-track">
+                  <span class="bar-fill bench" data-fill="devis-bench"></span>
+                </div>
+                <span class="bar-value" data-value="devis-bench">0,0 %</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <a class="button ghost" data-role="cta" href="#" rel="noopener">Activer mes 3 leviers maintenant</a>
+      </section>
+
+      <footer class="footer">Local-first. Aucune donnée transmise.</footer>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
