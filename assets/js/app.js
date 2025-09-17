@@ -194,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
     calc();
   }
 
-  get('calcBtn').addEventListener('click', calc);
   get('saveBtn').addEventListener('click', save);
   get('resetBtn').addEventListener('click', resetAll);
 
