@@ -96,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function save() {
     const payload = Object.fromEntries(fieldIds.map((id) => [id, get(id).value]));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    alert('Valeurs mémorisées dans votre navigateur.');
   }
 
   function load() {
@@ -126,19 +125,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     updateBenchVisibility();
     calc();
+    save();
   }
 
-  get('calcBtn').addEventListener('click', calc);
-  get('saveBtn').addEventListener('click', save);
+  get('calcBtn').addEventListener('click', () => {
+    calc();
+    save();
+  });
   get('resetBtn').addEventListener('click', resetAll);
 
   get('secteur').addEventListener('change', () => {
     updateBenchVisibility();
     calc();
+    save();
   });
 
   ['leads', 'devis', 'signatures', 'panier', 'improv', 'benchLD', 'benchDS'].forEach((id) => {
-    get(id).addEventListener('input', calc);
+    get(id).addEventListener('input', () => {
+      calc();
+      save();
+    });
   });
 
   load();
