@@ -1,14 +1,88 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const formatCurrency = (value) =>
-    Number.isFinite(value)
-      ? value.toLocaleString('fr-FR', {
-          style: 'currency',
-          currency: 'EUR',
-          maximumFractionDigits: 0,
-        })
-      : '—';
+  const standardCurrencyFormatter = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  });
+
+  const decimalFormatters = {
+    0: new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }),
+    1: new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1,
+    }),
+  };
+
+  const unitSteps = [
+    { min: 1_000_000_000, divisor: 1_000_000_000, suffix: 'Md€' },
+    { min: 1_000_000, divisor: 1_000_000, suffix: 'M€' },
+    { min: 1_000, divisor: 1_000, suffix: 'k€' },
+  ];
+
+  const normalizeSpaces = (value) =>
+    value.replace(/\u202f|\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const tidyCurrencySpacing = (value, { keepCurrencyGap = true } = {}) => {
+    const normalized = normalizeSpaces(value);
+    return keepCurrencyGap
+      ? normalized.replace(/\s€$/, ' €')
+      : normalized.replace(/\s€$/, '€');
+  };
+
+  const formatCurrency = (value) => {
+    if (!Number.isFinite(value)) {
+      return { display: '—', compact: false, title: '' };
+    }
+
+    const full = tidyCurrencySpacing(standardCurrencyFormatter.format(value));
+    const absValue = Math.abs(value);
+    if (absValue < 1_000) {
+      return { display: full, compact: false, title: '' };
+    }
+
+    const initialIndex = unitSteps.findIndex((step) => absValue >= step.min);
+    if (initialIndex === -1) {
+      return { display: full, compact: false, title: '' };
+    }
+
+    const formatWithUnit = (index) => {
+      const { divisor, suffix } = unitSteps[index];
+      const scaled = value / divisor;
+      const absScaled = Math.abs(scaled);
+      const maxFractionDigits = absScaled < 10 ? 1 : 0;
+      const factor = 10 ** maxFractionDigits;
+      const roundedScaled = Math.round(scaled * factor) / factor;
+
+      if (Math.abs(roundedScaled) >= 1000 && index > 0) {
+        return formatWithUnit(index - 1);
+      }
+
+      const formatter = decimalFormatters[maxFractionDigits];
+      const formattedNumber = normalizeSpaces(formatter.format(roundedScaled));
+      const display = normalizeSpaces(`${formattedNumber} ${suffix}`);
+      return { display, compact: true, title: full };
+    };
+
+    return formatWithUnit(initialIndex);
+  };
 
   const get = (id) => document.getElementById(id);
+
+  const updateCurrencyValue = (elementId, value) => {
+    const element = get(elementId);
+    if (!element) return;
+    const { display, compact, title } = formatCurrency(value);
+    element.textContent = display;
+    element.classList.toggle('is-compact', compact);
+    if (title) {
+      element.setAttribute('title', title);
+    } else {
+      element.removeAttribute('title');
+    }
+  };
 
   const readNumber = (id) => {
     const element = get(id);
@@ -91,9 +165,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function resetResults({ benchLD, benchDS }) {
-    get('caActuel').textContent = '—';
-    get('caProjete').textContent = '—';
-    get('manque').textContent = '—';
+    updateCurrencyValue('caActuel', NaN);
+    updateCurrencyValue('caProjete', NaN);
+    updateCurrencyValue('manque', NaN);
 
     get('barLD').style.width = '0%';
     get('barDS').style.width = '0%';
@@ -134,9 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const caProjete = devis * (tauxDSAmeliore / 100) * panier;
     const manque = Math.max(0, caProjete - caActuel);
 
-    get('caActuel').textContent = formatCurrency(caActuel);
-    get('caProjete').textContent = formatCurrency(caProjete);
-    get('manque').textContent = formatCurrency(manque);
+    updateCurrencyValue('caActuel', caActuel);
+    updateCurrencyValue('caProjete', caProjete);
+    updateCurrencyValue('manque', manque);
 
     get('barLD').style.width = `${clampPercent(tauxLD)}%`;
     get('barDS').style.width = `${clampPercent(tauxDS)}%`;
