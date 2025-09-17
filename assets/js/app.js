@@ -12,13 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const fieldIds = ['leads', 'devis', 'signatures', 'panier', 'improv', 'secteur', 'benchLD', 'benchDS'];
 
+  const DEFAULT_SECTOR = 'chauffage';
+
   const sectorPresets = {
-    indus: { ld: 30, ds: 40 },
-    b2b: { ld: 25, ds: 35 },
-    surmesure: { ld: 20, ds: 30 },
+    chauffage: { ld: 34, ds: 42 },
+    'constructeurs-bois': { ld: 29, ds: 35 },
+    'equipements-industriels': { ld: 31, ds: 37 },
+    'materiaux-ecologiques': { ld: 27, ds: 34 },
+    'equipements-artisanat-batiment': { ld: 36, ds: 39 },
+    'equipements-electromenagers': { ld: 38, ds: 44 },
+    'mobilier-haut-de-gamme': { ld: 24, ds: 31 },
+    'piscines-spas': { ld: 23, ds: 29 },
+    'revetements-sol': { ld: 33, ds: 38 },
+    'systemes-securite': { ld: 37, ds: 41 },
+    'peintures-revetements-industriels': { ld: 30, ds: 36 },
+    'machines-outils': { ld: 26, ds: 33 },
+    'materiel-electrique': { ld: 35, ds: 40 },
+    'solutions-domotiques': { ld: 28, ds: 34 },
+    'ventilation-climatisation': { ld: 32, ds: 37 },
+    'charpentes-metalliques': { ld: 25, ds: 32 },
+    'materiel-agroalimentaire': { ld: 29, ds: 38 },
+    'logistique-industrielle': { ld: 27, ds: 35 },
+    'emballages-techniques': { ld: 34, ds: 39 },
   };
 
-  const STORAGE_KEY = 'convbench@v1';
+  const STORAGE_KEY = 'convbench@v2';
   const CTA_BASE_URL = 'https://cal.com/your-handle/diagnostic';
   const customRow = get('customRow');
 
@@ -31,11 +49,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return { cls: 'bad', label: 'En dessous' };
   };
 
+  function normalizeSectorValue() {
+    const select = get('secteur');
+    if (select.value !== 'custom' && !sectorPresets[select.value]) {
+      select.value = DEFAULT_SECTOR;
+    }
+  }
+
   function updateBenchVisibility() {
-    const isCustom = get('secteur').value === 'custom';
+    normalizeSectorValue();
+    const selected = get('secteur').value;
+    const isCustom = selected === 'custom';
     customRow.classList.toggle('is-visible', isCustom);
     if (!isCustom) {
-      const preset = sectorPresets[get('secteur').value] || sectorPresets.indus;
+      const preset = sectorPresets[selected] || sectorPresets[DEFAULT_SECTOR];
       get('benchLD').value = preset.ld;
       get('benchDS').value = preset.ds;
     }
@@ -117,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetAll() {
     fieldIds.forEach((id) => {
       if (id === 'secteur') {
-        get(id).value = 'indus';
+        get(id).value = DEFAULT_SECTOR;
       } else if (id === 'improv') {
         get(id).value = 10;
       } else {
