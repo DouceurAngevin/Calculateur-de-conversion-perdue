@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversion & Benchmark Express</title>
+  <style>
+    :root{
+      --bg:#0b1020;--card:#121a35;--ink:#e9ecf4;--muted:#9aa3b2;--brand:#6ea8fe;--ok:#3ddc84;--warn:#ffd166;--bad:#ff6b6b;--shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;--pad:14px;--gap:14px;--max:980px
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#182246 0%,transparent 50%),
+                      radial-gradient(1000px 500px at 120% 10%,#1b2a5a 0%,transparent 50%),
+                      var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:var(--max);margin:auto;padding:28px}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow)}
+    header{display:flex;justify-content:space-between;align-items:center;gap:var(--gap);padding:20px 22px}
+    header h1{font-size:20px;margin:0}
+    header small{color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr;gap:var(--gap);padding:0 22px 22px}
+    @media(min-width:860px){.grid{grid-template-columns:1.2fr .8fr}}
+    .panel{padding:20px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06)}
+    .panel h2{margin:0 0 8px 0;font-size:16px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .input{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+    label{font-weight:600}
+    input,select{background:#0e1430;color:var(--ink);border:1px solid rgba(255,255,255,.08);padding:12px;border-radius:10px;outline:none}
+    input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(110,168,254,.25)}
+    .hint{color:var(--muted);font-size:12px}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+    button{appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .primary{background:var(--brand);color:#0a0f22}
+    .ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.14)}
+
+    /* Results */
+    .results{display:grid;gap:var(--gap)}
+    .kpis{display:grid;grid-template-columns:1fr;gap:var(--gap)}
+    @media(min-width:680px){.kpis{grid-template-columns:repeat(3,1fr)}}
+    .kpi{padding:16px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06)}
+    .kpi .label{color:var(--muted);font-size:12px}
+    .kpi .value{font-size:22px;font-weight:800;margin-top:6px}
+
+    .bar{position:relative;height:12px;background:#0e1430;border:1px solid rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+    .bar>span{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok));transition:width .3s ease}
+    .bar .target{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--brand);opacity:.8}
+
+    .compare{display:grid;gap:10px}
+    .compare .row2{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
+    .pill{font-weight:700;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.1)}
+    .pill.ok{background:rgba(61,220,132,.12);border-color:rgba(61,220,132,.3);color:#b6ffda}
+    .pill.warn{background:rgba(255,209,102,.12);border-color:rgba(255,209,102,.3);color:#ffe6a6}
+    .pill.bad{background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.3);color:#ffc5c5}
+
+    .cta{display:flex;justify-content:flex-end;padding:0 22px 22px}
+    .cta a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:var(--ok);color:#062013;padding:12px 18px;border-radius:12px;font-weight:800}
+    .cta small{display:block;color:var(--muted);margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap card">
+    <header>
+      <div>
+        <h1>Conversion & Benchmark Express</h1>
+        <small>En 60 secondes : votre manque à gagner et vos priorités.</small>
+      </div>
+      <button class="ghost" id="resetBtn" title="Réinitialiser">↺ Réinitialiser</button>
+    </header>
+
+    <section class="grid">
+      <!-- Inputs -->
+      <div class="panel">
+        <h2>1) Données (mensuelles)</h2>
+        <div class="row">
+          <div class="input">
+            <label for="leads">Leads entrants</label>
+            <input id="leads" type="number" min="0" step="1" placeholder="ex. 120" />
+            <div class="hint">Formulaires, appels, emails…</div>
+          </div>
+          <div class="input">
+            <label for="devis">Devis envoyés</label>
+            <input id="devis" type="number" min="0" step="1" placeholder="ex. 60" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="input">
+            <label for="signatures">Signatures</label>
+            <input id="signatures" type="number" min="0" step="1" placeholder="ex. 18" />
+          </div>
+          <div class="input">
+            <label for="panier">Panier moyen (€)</label>
+            <input id="panier" type="number" min="0" step="50" placeholder="ex. 4500" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="input">
+            <label for="improv">Amélioration visée (points de %)</label>
+            <input id="improv" type="number" min="0" max="100" step="1" value="10" />
+            <div class="hint">Appliquée au taux Devis → Signatures</div>
+          </div>
+          <div class="input">
+            <label for="secteur">Référence secteur</label>
+            <select id="secteur">
+              <option value="indus">Industrie (30% / 40%)</option>
+              <option value="b2b">B2B services (25% / 35%)</option>
+              <option value="surmesure">Projets sur-mesure (20% / 30%)</option>
+              <option value="custom">Personnalisé…</option>
+            </select>
+            <div class="hint">Format : Leads→Devis / Devis→Signatures</div>
+          </div>
+        </div>
+        <div class="row" id="customRow" style="display:none">
+          <div class="input">
+            <label for="benchLD">Réf. Leads→Devis (%)</label>
+            <input id="benchLD" type="number" min="0" max="100" step="1" value="30" />
+          </div>
+          <div class="input">
+            <label for="benchDS">Réf. Devis→Signatures (%)</label>
+            <input id="benchDS" type="number" min="0" max="100" step="1" value="40" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="calcBtn">Calculer</button>
+          <button class="ghost" id="saveBtn">💾 Mémoriser</button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="panel">
+        <h2>2) Résultats</h2>
+        <div class="results">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="label">CA actuel (estimé)</div>
+              <div class="value" id="caActuel">—</div>
+            </div>
+            <div class="kpi">
+              <div class="label">CA projeté (+<span id="improvShow">10</span> pts)</div>
+              <div class="value" id="caProjete">—</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Manque à gagner mensuel</div>
+              <div class="value" id="manque">—</div>
+            </div>
+          </div>
+
+          <div class="compare">
+            <div class="row2">
+              <div>
+                <strong>Taux Leads → Devis</strong>
+                <div class="bar" aria-label="Taux Leads vers Devis">
+                  <span id="barLD"></span>
+                  <i class="target" id="targetLD" title="Référence secteur"></i>
+                </div>
+                <small id="txtLD" class="hint">—</small>
+              </div>
+              <span id="pillLD" class="pill">—</span>
+            </div>
+
+            <div class="row2">
+              <div>
+                <strong>Taux Devis → Signatures</strong>
+                <div class="bar" aria-label="Taux Devis vers Signatures">
+                  <span id="barDS"></span>
+                  <i class="target" id="targetDS" title="Référence secteur"></i>
+                </div>
+                <small id="txtDS" class="hint">—</small>
+              </div>
+              <span id="pillDS" class="pill">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="cta">
+      <div>
+        <a id="ctaLink" href="#" target="_blank" rel="noopener">Prendre RDV pour activer ces leviers →</a>
+        <small>Astuce : intégrez ce module via /embed (GitHub Pages ou équivalent). Aucune donnée n’est envoyée côté serveur.</small>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const € = (n)=> isFinite(n) ? n.toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}) : '—';
+    const pct = (n)=> isFinite(n) ? (n*100).toFixed(0)+'%' : '—';
+
+    const el = (id)=> document.getElementById(id);
+    const inputs = ['leads','devis','signatures','panier','improv','secteur','benchLD','benchDS'];
+
+    const presets = {
+      indus:{ld:30, ds:40},
+      b2b:{ld:25, ds:35},
+      surmesure:{ld:20, ds:30}
+    };
+
+    function updateBenchVisibility(){
+      const isCustom = el('secteur').value==='custom';
+      el('customRow').style.display = isCustom? 'grid':'none';
+      if(!isCustom){
+        const p = presets[el('secteur').value] || presets.indus;
+        el('benchLD').value = p.ld; el('benchDS').value = p.ds;
+      }
+    }
+
+    function classify(value, ref){
+      const diff = value - ref; // points
+      if (diff >= 5) return {cls:'ok', label:'Au-dessus'};
+      if (Math.abs(diff) < 5) return {cls:'warn', label:'Dans la moyenne'};
+      return {cls:'bad', label:'En dessous'};
+    }
+
+    function calc(){
+      const leads = +el('leads').value || 0;
+      const devis = +el('devis').value || 0;
+      const sign  = +el('signatures').value || 0;
+      const panier= +el('panier').value || 0;
+      const improv= +el('improv').value || 0; // points
+      const benchLD = +el('benchLD').value || 0;
+      const benchDS = +el('benchDS').value || 0;
+
+      // Taux
+      const tLD = leads>0 ? (devis/leads)*100 : 0;
+      const tDS = devis>0 ? (sign/devis)*100 : 0;
+
+      // CA
+      const caActuel = sign * panier;
+      const tDSplus = Math.min(100, tDS + improv);
+      const caProjete = devis * (tDSplus/100) * panier;
+      const manque = Math.max(0, caProjete - caActuel);
+
+      // KPIs
+      el('improvShow').textContent = improv.toFixed(0);
+      el('caActuel').textContent = €(caActuel);
+      el('caProjete').textContent = €(caProjete);
+      el('manque').textContent = €(manque);
+
+      // Bars
+      el('barLD').style.width = Math.max(0, Math.min(tLD,100)) + '%';
+      el('barDS').style.width = Math.max(0, Math.min(tDS,100)) + '%';
+
+      // Targets position
+      el('targetLD').style.left = Math.max(0, Math.min(benchLD,100)) + '%';
+      el('targetDS').style.left = Math.max(0, Math.min(benchDS,100)) + '%';
+
+      // Texts
+      el('txtLD').textContent = `Votre taux : ${tLD.toFixed(0)}% • Réf : ${benchLD}%`;
+      el('txtDS').textContent = `Votre taux : ${tDS.toFixed(0)}% • Réf : ${benchDS}%`;
+
+      // Pills
+      const a = classify(tLD, benchLD);
+      const b = classify(tDS, benchDS);
+      el('pillLD').className = 'pill ' + a.cls; el('pillLD').textContent = a.label;
+      el('pillDS').className = 'pill ' + b.cls; el('pillDS').textContent = b.label;
+
+      // Update CTA deep-link with query params (for analytics/CRM prefill if utile)
+      const q = new URLSearchParams({leads, devis, sign, panier, tLD: tLD.toFixed(0), tDS: tDS.toFixed(0), manque: Math.round(manque)}).toString();
+      el('ctaLink').href = `https://cal.com/your-handle/diagnostic?${q}`;
+    }
+
+    function save(){
+      const data = Object.fromEntries(inputs.map(id=>[id, el(id).value]));
+      localStorage.setItem('convbench@v1', JSON.stringify(data));
+      alert('Valeurs mémorisées dans votre navigateur.');
+    }
+    function load(){
+      const raw = localStorage.getItem('convbench@v1');
+      if(!raw) return;
+      try{ const data = JSON.parse(raw); inputs.forEach(id=>{ if(data[id]!==undefined) el(id).value = data[id]; }); }catch(e){}
+    }
+    function resetAll(){ inputs.forEach(id=> el(id).value = ''); el('improv').value = 10; el('secteur').value='indus'; updateBenchVisibility(); calc(); }
+
+    // Events
+    el('calcBtn').addEventListener('click', calc);
+    el('saveBtn').addEventListener('click', save);
+    el('resetBtn').addEventListener('click', resetAll);
+    el('secteur').addEventListener('change', ()=>{updateBenchVisibility();});
+    ;['leads','devis','signatures','panier','improv','benchLD','benchDS'].forEach(id=> el(id).addEventListener('input', ()=>{ if(id!=='improv'){} }));
+
+    // Init
+    load();
+    updateBenchVisibility();
+    calc();
+  </script>
+</body>
+</html>
