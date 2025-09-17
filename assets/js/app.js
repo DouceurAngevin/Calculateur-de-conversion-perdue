@@ -241,7 +241,10 @@ document.addEventListener('DOMContentLoaded', () => {
     calc();
   }
 
-  get('saveBtn').addEventListener('click', save);
+  const saveBtn = get('saveBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', save);
+  }
   get('resetBtn').addEventListener('click', resetAll);
 
   get('secteur').addEventListener('change', () => {

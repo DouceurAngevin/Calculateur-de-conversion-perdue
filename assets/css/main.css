@@ -116,17 +116,6 @@ select:focus {
   color: var(--color-text-muted);
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
-}
-
-.actions-note {
-  flex-basis: 100%;
-}
-
 button {
   appearance: none;
   border: 1px solid transparent;
