@@ -46,7 +46,7 @@ body {
 .app-grid {
   display: grid;
   gap: var(--space-lg);
-  padding: 0 var(--space-xl) var(--space-xl);
+  padding: var(--space-md) var(--space-xl) var(--space-xl);
 }
 
 @media (min-width: 860px) {
