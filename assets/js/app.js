@@ -10,6 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const get = (id) => document.getElementById(id);
 
+  const readNumber = (id) => {
+    const element = get(id);
+    if (!element) return null;
+    const rawValue = element.value;
+    if (rawValue === '' || rawValue === null) return null;
+    const normalized = rawValue.trim();
+    if (normalized === '') return null;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
   const fieldIds = ['leads', 'devis', 'signatures', 'panier', 'improv', 'secteur', 'benchLD', 'benchDS'];
 
   const sectorPresets = {
@@ -43,18 +54,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderPill(elementId, verdict) {
     const element = get(elementId);
+    if (!verdict) {
+      element.className = 'pill';
+      element.textContent = '—';
+      return;
+    }
     element.className = `pill ${verdict.cls}`;
     element.textContent = verdict.label;
   }
 
+  function resetResults({ benchLD, benchDS }) {
+    get('caActuel').textContent = '—';
+    get('caProjete').textContent = '—';
+    get('manque').textContent = '—';
+
+    get('barLD').style.width = '0%';
+    get('barDS').style.width = '0%';
+
+    get('txtLD').textContent = `Votre taux : — • Réf : ${benchLD}%`;
+    get('txtDS').textContent = `Votre taux : — • Réf : ${benchDS}%`;
+
+    renderPill('pillLD', null);
+    renderPill('pillDS', null);
+
+    get('ctaLink').href = CTA_BASE_URL;
+  }
+
   function calc() {
-    const leads = Number(get('leads').value) || 0;
-    const devis = Number(get('devis').value) || 0;
-    const signatures = Number(get('signatures').value) || 0;
-    const panier = Number(get('panier').value) || 0;
-    const improvement = Number(get('improv').value) || 0;
-    const benchLD = Number(get('benchLD').value) || 0;
-    const benchDS = Number(get('benchDS').value) || 0;
+    const leads = readNumber('leads');
+    const devis = readNumber('devis');
+    const signatures = readNumber('signatures');
+    const panier = readNumber('panier');
+    const improvement = clampPercent(readNumber('improv') ?? 0);
+    const benchLD = clampPercent(readNumber('benchLD') ?? 0);
+    const benchDS = clampPercent(readNumber('benchDS') ?? 0);
+
+    get('improvShow').textContent = improvement.toFixed(0);
+
+    get('targetLD').style.left = `${benchLD}%`;
+    get('targetDS').style.left = `${benchDS}%`;
+
+    if ([leads, devis, signatures, panier].some((value) => value === null)) {
+      resetResults({ benchLD, benchDS });
+      return;
+    }
 
     const tauxLD = leads > 0 ? (devis / leads) * 100 : 0;
     const tauxDS = devis > 0 ? (signatures / devis) * 100 : 0;
@@ -64,16 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const caProjete = devis * (tauxDSAmeliore / 100) * panier;
     const manque = Math.max(0, caProjete - caActuel);
 
-    get('improvShow').textContent = improvement.toFixed(0);
     get('caActuel').textContent = formatCurrency(caActuel);
     get('caProjete').textContent = formatCurrency(caProjete);
     get('manque').textContent = formatCurrency(manque);
 
     get('barLD').style.width = `${clampPercent(tauxLD)}%`;
     get('barDS').style.width = `${clampPercent(tauxDS)}%`;
-
-    get('targetLD').style.left = `${clampPercent(benchLD)}%`;
-    get('targetDS').style.left = `${clampPercent(benchDS)}%`;
 
     get('txtLD').textContent = `Votre taux : ${tauxLD.toFixed(0)}% • Réf : ${benchLD}%`;
     get('txtDS').textContent = `Votre taux : ${tauxDS.toFixed(0)}% • Réf : ${benchDS}%`;
