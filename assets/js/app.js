@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const STORAGE_KEY = 'convbench@v1';
   const CTA_BASE_URL = 'https://cal.com/your-handle/diagnostic';
   const customRow = get('customRow');
+  let cachedCustomBench = null;
 
   const clampPercent = (value) => Math.max(0, Math.min(100, value));
 
@@ -32,13 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function updateBenchVisibility() {
-    const isCustom = get('secteur').value === 'custom';
+    const secteur = get('secteur').value;
+    const isCustom = secteur === 'custom';
     customRow.classList.toggle('is-visible', isCustom);
-    if (!isCustom) {
-      const preset = sectorPresets[get('secteur').value] || sectorPresets.indus;
-      get('benchLD').value = preset.ld;
-      get('benchDS').value = preset.ds;
+    if (isCustom) {
+      if (cachedCustomBench) {
+        get('benchLD').value = cachedCustomBench.ld ?? '';
+        get('benchDS').value = cachedCustomBench.ds ?? '';
+      }
+      return;
     }
+
+    const preset = sectorPresets[secteur] || sectorPresets.indus;
+    get('benchLD').value = preset.ld;
+    get('benchDS').value = preset.ds;
   }
 
   function renderPill(elementId, verdict) {
@@ -93,23 +101,70 @@ document.addEventListener('DOMContentLoaded', () => {
     get('ctaLink').href = `${CTA_BASE_URL}?${params.toString()}`;
   }
 
-  function save() {
-    const payload = Object.fromEntries(fieldIds.map((id) => [id, get(id).value]));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  function readStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (error) {
+      console.warn('Impossible de charger les valeurs enregistrées', error);
+      return null;
+    }
+  }
+
+  function writeStorage(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.warn('Impossible de mémoriser les valeurs', error);
+    }
+  }
+
+  function save(options = {}) {
+    const existing = readStorage() || {};
+    const fields = Object.fromEntries(fieldIds.map((id) => [id, get(id).value]));
+    const payload = { fields };
+
+    if (fields.secteur === 'custom') {
+      cachedCustomBench = {
+        ld: fields.benchLD,
+        ds: fields.benchDS,
+      };
+      payload.customBench = { ...cachedCustomBench };
+    } else if (!options.clearCustomBench) {
+      const preserved = cachedCustomBench || existing.customBench;
+      if (preserved) {
+        cachedCustomBench = { ...preserved };
+        payload.customBench = { ...preserved };
+      } else {
+        cachedCustomBench = null;
+      }
+    } else {
+      cachedCustomBench = null;
+    }
+
+    writeStorage(payload);
   }
 
   function load() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      fieldIds.forEach((id) => {
-        if (data[id] !== undefined) {
-          get(id).value = data[id];
-        }
-      });
-    } catch (error) {
-      console.warn('Impossible de charger les valeurs enregistrées', error);
+    const stored = readStorage();
+    if (!stored) return;
+
+    const data = stored.fields || stored;
+
+    fieldIds.forEach((id) => {
+      if (data[id] !== undefined) {
+        get(id).value = data[id];
+      }
+    });
+
+    if (stored.customBench && stored.customBench.ld !== undefined && stored.customBench.ds !== undefined) {
+      cachedCustomBench = { ...stored.customBench };
+    } else if (data.secteur === 'custom') {
+      cachedCustomBench = {
+        ld: data.benchLD,
+        ds: data.benchDS,
+      };
     }
   }
 
@@ -125,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     updateBenchVisibility();
     calc();
-    save();
+    save({ clearCustomBench: true });
   }
 
   get('calcBtn').addEventListener('click', () => {
